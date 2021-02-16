@@ -4,7 +4,7 @@ from api_requests import *
 
 
 def get_test_class(field, required, nullable):
-    class My(Req):
+    class My(ApiRequest):
         value = field(required, nullable)
     return My
 
@@ -13,7 +13,8 @@ def run_test_field(field, value):
     dict_items = list(ClientsInterestsRequest.__dict__.values()) + list(OnlineScoreRequest.__dict__.values())
     item = [i for i in dict_items if type(i) == field][0]
     my_class = get_test_class(field, item.required, item.nullable)
-    my_class({'value': value})
+    class_instance = my_class()
+    class_instance.validate(kwargs={'value': value})
 
 
 class TestOkFields:

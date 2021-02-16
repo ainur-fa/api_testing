@@ -16,6 +16,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from store import Store
 from api_requests import ClientsInterestsRequest, OnlineScoreRequest, MethodRequest
 from scoring import get_score, get_interests
+from custom_erros import ValidationError
 from constants import SALT, ADMIN_SALT, OK, BAD_REQUEST, FORBIDDEN, \
     NOT_FOUND, INVALID_REQUEST, INTERNAL_ERROR, ERRORS
 
@@ -51,7 +52,8 @@ def authorization(func):
 def method_handler(request, ctx, store):
     """Обработчик имеющихся методов"""
     try:
-        req = MethodRequest(request.get('body'))
+        req = MethodRequest()
+        req.validate(request.get('body'))
         logging.info('Requested method value: "%s"', req.method)
         if req.method == 'online_score':
             response, code = online_score_handler(req, ctx, store)
@@ -61,8 +63,7 @@ def method_handler(request, ctx, store):
             logging.info('Unavailable method value')
             response, code = ERRORS.get(INVALID_REQUEST), INVALID_REQUEST
         return response, code
-    except (ValueError, AttributeError) as e:
-        logging.exception(e)
+    except ValidationError:
         return ERRORS.get(INVALID_REQUEST), INVALID_REQUEST
 
 
@@ -70,7 +71,8 @@ def method_handler(request, ctx, store):
 def online_score_handler(req, ctx, store):
     """Обработчик для online_score"""
     arguments = req.arguments
-    online_score = OnlineScoreRequest(arguments)
+    online_score = OnlineScoreRequest()
+    online_score.validate(arguments)
     ctx['has'] = [key for key, val in arguments.items() if val is not None]
     if req.is_admin:
         score = int(ADMIN_SALT)
@@ -87,7 +89,8 @@ def online_score_handler(req, ctx, store):
 @authorization
 def clients_interests_handler(req, ctx, store):
     """Обработчик для clients_interests"""
-    clients_interests = ClientsInterestsRequest(req.arguments)
+    clients_interests = ClientsInterestsRequest()
+    clients_interests.validate(req.arguments)
     ctx['nclients'] = len(clients_interests.client_ids)
     interests = {_id: get_interests(store, _id) for _id in
                  clients_interests.client_ids}
