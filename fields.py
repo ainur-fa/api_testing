@@ -42,7 +42,7 @@ class Field:
                     f'but {type(value).__name__} received')
 
     def validate(self, value):
-        pass
+        return True
 
 
 class CharField(Field):
@@ -56,9 +56,9 @@ class ArgumentsField(Field):
 class EmailField(CharField):
 
     def validate(self, value):
-        if '@' in value:
-            return
-        raise ValidationError(f'{self.__class__.__name__} must be contains "@')
+        if value and '@' not in value:
+            raise ValidationError(f'{self.__class__.__name__} must be contains "@')
+        return True
 
 
 class PhoneField(Field):
@@ -74,6 +74,7 @@ class PhoneField(Field):
             raise ValidationError('PhoneField must contain only digits')
         elif not value.startswith('7'):
             raise ValidationError('PhoneField must starts with "7"')
+        return True
 
 
 class DateField(CharField):
@@ -83,6 +84,7 @@ class DateField(CharField):
             datetime.datetime.strptime(value, '%d.%m.%Y')
         except Exception as e:
             raise ValidationError("DateField is incorrect")
+        return True
 
 
 class BirthDayField(DateField):
@@ -94,6 +96,7 @@ class BirthDayField(DateField):
         now_year = datetime.datetime.now().year
         if (now_year - birthday_year) > 70:
             raise ValidationError('More than 70 yeas have been since date of birth')
+        return True
 
 
 class GenderField(Field):
@@ -103,6 +106,7 @@ class GenderField(Field):
         if value not in GENDERS:
             raise ValidationError(
                 'Wrong value for GenderField, permissible value in [0, 1, 2]')
+        return True
 
 
 class ClientIDsField(Field):
@@ -112,3 +116,4 @@ class ClientIDsField(Field):
         all_is_int = all([type(i) is int for i in value]) if value else False
         if not all_is_int:
             raise ValidationError('ClientIDsField must contains only int items')
+        return True

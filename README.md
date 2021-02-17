@@ -117,6 +117,5 @@ Python 3.6 +
 ```
 pip install pytest
 
-python -m pytest test_func.py
-python -m pytest test_fields.py
+python -m pytest tests
 ```

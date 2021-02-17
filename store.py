@@ -1,10 +1,20 @@
 # -*- coding: utf-8 -*-
 from time import sleep
+from pathlib import Path
 import logging
+import configparser
 import redis
 
-HOST = 'localhost'
-PORT = 6379
+
+def init_config():
+    """Init configuration"""
+    cp = configparser.ConfigParser()
+    config_file = str(Path(__file__).parent.joinpath('settings.ini'))
+    cp.read(config_file)
+    cp_section = cp['store']
+    host = cp_section.get('HOST')
+    port = int(cp_section.get('PORT'))
+    return host, port
 
 
 def retry(count=3, interval=1):
@@ -26,12 +36,16 @@ def retry(count=3, interval=1):
     return my_decorator
 
 
+HOST, PORT = init_config()
+
+
 class Store:
 
-    def __init__(self):
-        self._r = redis.Redis(host=HOST, port=PORT, socket_timeout=2, decode_responses=True)
-        self._r.ping()
-        self.create_interests()
+    def __init__(self, host=HOST, port=PORT):
+        self._r = redis.Redis(host=host, port=port, socket_timeout=2, decode_responses=True)
+
+    def ping(self):
+        return self._r.ping()
 
     @retry()
     def get(self, key):
@@ -63,4 +77,5 @@ class Store:
             self.set(f'i:{_id}', interest)
 
     def disconnect(self):
-        self._r.connection_pool = None
+        self._r.connection_pool.disconnect()
+
