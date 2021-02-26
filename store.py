@@ -14,7 +14,8 @@ def init_config():
     cp_section = cp['store']
     host = cp_section.get('HOST')
     port = int(cp_section.get('PORT'))
-    return host, port
+    timeout = int(cp_section.get('TIMEOUT'))
+    return host, port, timeout
 
 
 def retry(count=3, interval=1):
@@ -36,13 +37,13 @@ def retry(count=3, interval=1):
     return my_decorator
 
 
-HOST, PORT = init_config()
+HOST, PORT, SOCKET_TIMEOUT = init_config()
 
 
 class Store:
 
-    def __init__(self, host=HOST, port=PORT):
-        self._r = redis.Redis(host=host, port=port, socket_timeout=2, decode_responses=True)
+    def __init__(self, host=HOST, port=PORT, socket_timeout=SOCKET_TIMEOUT):
+        self._r = redis.Redis(host=host, port=port, socket_timeout=socket_timeout, decode_responses=True)
 
     def ping(self):
         return self._r.ping()
